@@ -13,7 +13,7 @@ Moreover, the user can use some available flags to change at runtime the matrix 
     "mSW\int" for changing the match score in local alignment;
     "msSW\int" for changing the mismatch score in local alignment;
     "gapSW\int" for changing the gap score in local alignment;
-    "trSW\int" for changing the treshold for local alignment;
+    "thrSW\int" for changing the treshold for local alignment;
     "metNW\str" for swithcing between recursive and iterative execution in global alignment: it should specify "it" for iterative, and "rec" for recursive. 
 If not differently specified, the default values will be used, which include iterative procedure for global alignment.'''
 
@@ -58,12 +58,14 @@ for i in sys.argv[1:]:
         seqs.append(i)
 
 if len(seqs) == 2:
+    #Create the object with the inputs from the user
     z = NWAligner(seqs[0], seqs[1], NW_match_score, NW_mismatch_score, NW_gap_score, method=method)
     #The method NWAligner.getAlignment() outputs in the terminal the result of the performed global alignment
     z.getAlignment()
 
+    #Create the object with the inputs from the user
     x = SWAligner(seqs[0], seqs[1], SW_match_score, SW_mismatch_score, SW_gap_score,threshold=threshold)
-    #The method SWAligner.getAlignment() outputs in the terminal the result of the performed global alignment
+    #The method SWAligner.getAlignment() outputs in the terminal the result of the performed local alignment
     x.getAlignment()
 else:
     raise(ValueError('ArgumentError: you must pass exactly two strings as input'))

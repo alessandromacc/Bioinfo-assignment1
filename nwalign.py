@@ -66,7 +66,7 @@ class NWAligner:
                 self.alMat[i][j] = self.__best_move((i,j))
         return self.alMat[i][j]
         
-    def __best_move(self, coord):
+    def __best_move(self, coord: tuple) -> int:
         '''Determines the highest possible score for a matrix cell with given coordinates coord, according to the Needleman-Wunsch algorithm'''
         diag = self.alMat[coord[0]-1][coord[1]-1]
         if self.s1[coord[0]-1] == self.s2[coord[1]-1]:
@@ -77,7 +77,7 @@ class NWAligner:
         hv = self.alMat[coord[0]][coord[1]-1] + self.gap_score
         return max(val, vv, hv)
     
-    def __backtrack(self):
+    def __backtrack(self) -> None:
         '''Backtracks recursively along the matrix storing the first 20 alignment paths as lists of coordinates'''
         #base case
         if (len(self.m), len(self.m[-1])) == (1,1):
@@ -181,7 +181,7 @@ class NWAligner:
             else:
                 raise ValueError('Backtracking error')
     
-    def __backtrack_it(self):
+    def __backtrack_it(self) -> None:
         '''Backtracks iteratively to find the first 20 equivalent alignment paths and stores them as lists of coordinates'''
         self.pointer = (len(self.m)-1, len(self.m[-1])-1)
         self.branches = []
@@ -340,7 +340,7 @@ class NWAligner:
                     raise ValueError('Backtracking error')
 
 
-    def __align(self):
+    def __align(self) -> None:
         '''Last step of the alignment, moslty graphical, but contains some checking of the alignment score, since during benchmarking
         some cases produced final paths with different scores from the expected one. ierates over the list of paths and appends to
         self.__alignment the command line representation of an alignment, if it has passed the final check.'''
@@ -363,12 +363,12 @@ class NWAligner:
             matches = []
             for i in range(len(al1)):
                 if al1[i] == al2[i]:
-                    matches.append('*')
-                elif al1[i] != al2[i] and (al1[i] != '-' and al2[i] != '-'):
                     matches.append('|')
+                elif al1[i] != al2[i] and (al1[i] != '-' and al2[i] != '-'):
+                    matches.append('*')
                 else:
                     matches.append(' ')
-            validate_score = matches.count('*')*self.match_score + matches.count('|')*self.mismatch_score + matches.count(' ')*self.gap_score
+            validate_score = matches.count('|')*self.match_score + matches.count('*')*self.mismatch_score + matches.count(' ')*self.gap_score
             if self.score == validate_score and ' '.join(al1) + '\n' + ' '.join(matches) + '\n' + ' '.join(al2) not in self.__alignment:
                 if len(al1) <= 75:
                     self.__alignment.append([' '.join(al1) + '\n' + ' '.join(matches)+ f'  ({len(al1)})' + '\n' + ' '.join(al2)])
@@ -386,7 +386,7 @@ class NWAligner:
                     self.__alignment.append(als)
     
     
-    def getAlignment(self):
+    def getAlignment(self) -> None:
         '''Outputs nicely all the produced alignment; this was implemented to be the only legal way for the use to access the alignment'''
         if len(self.__alignment) > 0:
             print('='*150, end='\n\n')
@@ -405,7 +405,7 @@ class NWAligner:
                 print('='*50, end='\n\n')
             
 
-    def getMatrix(self):
+    def getMatrix(self) -> None:
         '''Outputs nicely the alignment matrix, useful in testing and checking.'''
         print('', end='\t')
         print('§', end = '\t')

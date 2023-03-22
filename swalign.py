@@ -58,7 +58,7 @@ class SWAligner:
             self.lenError = True
 
 
-    def __fill(self):
+    def __fill(self) -> None:
         '''Along with filling the matrix with the proper values from the __best_move() method,
         takes care of finding the starting points with the highest scores and storing them properly for later use'''
         max = 0
@@ -78,7 +78,7 @@ class SWAligner:
         self.starts = max_coord
 
     
-    def __best_move(self, coord):
+    def __best_move(self, coord: tuple) -> int:
         '''Determines the highest possible score for a matrix cell with given coordinates coord, according to the Smith-Waterman algorithm'''
         diag = self.alMat[coord[0]-1][coord[1]-1]
         if self.s1[coord[0]-1] == self.s2[coord[1]-1]:
@@ -89,7 +89,7 @@ class SWAligner:
         hv = self.alMat[coord[0]][coord[1]-1] + self.gap_score
         return max(val, vv, hv, 0)
     
-    def __backtrack(self):
+    def __backtrack(self) -> None:
         '''Backtracks recursively along the matrix to identify the alignment path associated with a start;
         quite complex in its case handling, since the aim was that of covering the most cases where a precise decision has to be taken,
         for the sake of the algorithmic correctness. Since it is used iteratively by the object over many paths, employs copies of the main
@@ -98,7 +98,7 @@ class SWAligner:
             return
         if len(self.am) == 1:
             if self.am[-1][-2] == 0:
-                self.path.append((len(self.am)-1, len(self.am[-1])-1))
+                
                 self.paths.append(self.path[::-1])
                 return
             else:
@@ -108,7 +108,7 @@ class SWAligner:
                 self.__backtrack()
         elif len(self.am[-1]) == 1:
             if self.am[-2][-1] == 0:
-                self.path.append((len(self.am)-1, len(self.am[-1])-1))
+                
                 self.paths.append(self.path[::-1])
                 return
             else:
@@ -117,7 +117,8 @@ class SWAligner:
                 self.mm = self.mm[:-1]
                 self.__backtrack()
         elif self.am[-1][-2] == self.am[-2][-1] == self.am[-2][-2] == 0:
-            self.path.append((len(self.am)-1, len(self.am[-1])-1))
+            if self.am[-1][-1] > 0:
+                self.path.append((len(self.am)-1, len(self.am[-1])-1))
             self.paths.append(self.path[::-1])
             return
         else:
@@ -126,23 +127,24 @@ class SWAligner:
                 if self.am[-1][-1] - self.am[-1][-2] == self.gap_score:
                     current_am = self.am[::][::]
                     current_mm = self.mm[::][::]
-                    
                     self.path.append((len(self.am)-1, len(self.am[-1])-1))
                     self.am = [[k for k in j[:-1]] for j in self.am[:-1]]
                     self.mm = [[k for k in j[:-1]] for j in self.mm[:-1]]
                     self.__backtrack()
                     self.am = current_am
                     self.mm = current_mm
+                    self.path = current_path[::]
                 if self.am[-1][-1] - self.am[-2][-1] == self.gap_score:
                     current_am = self.am[::][::]
                     current_mm = self.mm[::][::]
+                    current_path = self.path[::]
                     self.path.append((len(self.am)-1, len(self.am[-1])-1))
                     self.am = self.am[:-1]
                     self.mm = self.mm[:-1]
                     self.__backtrack()
                     self.am = current_am
                     self.mm = current_mm
-                self.path = current_path[::]
+                    self.path = current_path[::]
                 self.path.append((len(self.am)-1, len(self.am[-1])-1))
                 self.am = [[k for k in j[:-1]] for j in self.am[:-1]]
                 self.mm = [[k for k in j[:-1]] for j in self.mm[:-1]]
@@ -159,7 +161,7 @@ class SWAligner:
                     self.__backtrack()
                     self.am = current_am
                     self.mm = current_mm
-                self.path = current_path
+                self.path = current_path[::]
                 self.path.append((len(self.am)-1, len(self.am[-1])-1))
                 self.am = [[k for k in j[:-1]] for j in self.am]
                 self.mm = [[k for k in j[:-1]] for j in self.mm]
@@ -176,7 +178,7 @@ class SWAligner:
                     self.__backtrack()
                     self.am = current_am
                     self.mm = current_mm
-                self.path = current_path
+                self.path = current_path[::]
                 self.path.append((len(self.am)-1, len(self.am[-1])-1))
                 self.am = self.am[:-1]
                 self.mm = self.mm[:-1]
@@ -199,7 +201,7 @@ class SWAligner:
             else:
                 raise(ValueError('BacktrackingError'))
     
-    def __align(self):
+    def __align(self) -> None:
         '''Final alingment executed automatically in an iterative way over the paths in self.paths; 
         appends to self.alignment the graphical version of the aligned sequences to be output. As in common
         depictions of Smith-Waterman aligned sequences, non-ovelaying parts are included.'''
@@ -226,6 +228,7 @@ class SWAligner:
                 al2.append(self.s2[0])
             for j in range(1, len(i)):
                 if i[j][0] == i[j-1][0] and i[j][1] == i[j-1][1]:
+                    print(i)
                     raise(ValueError('AlignementError - 1'))
                 elif i[j][0] == i[j-1][0]:
                     al1.append('-')
@@ -261,9 +264,9 @@ class SWAligner:
                 if al1[i] in [' ','-'] or al2[i] in [' ','-']:
                     matches.append(' ')
                 elif al1[i] != al2[i]:
-                    matches.append('|')
-                else:
                     matches.append('*')
+                else:
+                    matches.append('|')
             
             #Not checking wether the alignment is already present among the alignments can produce identical
             #alignments technically coming from different paths
@@ -283,7 +286,7 @@ class SWAligner:
                 self.__alignment.append(als)
     
     
-    def getMatrix(self):
+    def getMatrix(self) -> None:
         '''Outputs nicely the alignment matrix, useful in testing and checking.'''
         print('', end='\t')
         print('§', end = '\t')
@@ -299,7 +302,7 @@ class SWAligner:
                 print(self.alMat[i][j], end = '\t')
             print('\n')
     
-    def getAlignment(self):
+    def getAlignment(self) -> None:
         '''Outputs nicely all the produced alignment; this was implemented to be the only legal way for the use to access the alignment'''
         if len(self.__alignment) > 0:
             print('='*150, end='\n\n')
