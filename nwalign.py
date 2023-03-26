@@ -420,3 +420,132 @@ class NWAligner:
             for j in range(len(self.alMat[i])):
                 print(self.alMat[i][j], end = '\t')
             print('\n')
+
+
+class FastAlignNW:
+    '''Object thought for quick computation and displaying of a sequence pair alignment, no storing
+    or further processing, none-returning static methods.'''
+    @staticmethod
+    def align(s1: str, s2: str, match_score: int = 1, mismatch_score: int = -1, gap_score: int = -2) -> None:
+        # Initialization and matrix filling
+        s1 = s1.upper()
+        s2 = s2.upper()
+        alMat = []
+        alMat.append([gap_score*i for i in range(len(s2)+1)])
+        for i in range(1, len(s1)+1):
+            row = []
+            row.append(gap_score*i)
+            for j in range(len(s2)):
+                row.append(None)
+            alMat.append(row)
+        for i in range(1, len(s1)+1):
+            for j in range(1, len(s2)+1):
+                diag = alMat[i-1][j-1]
+                if s1[i-1] == s2[j-1]:
+                    val = diag + match_score
+                else:
+                    val = diag + mismatch_score
+                vv = alMat[i-1][j] + gap_score
+                hv = alMat[i][j-1] + gap_score
+                
+                alMat[i][j] = max(val, vv, hv)
+        score = alMat[-1][-1]
+
+        # Backtracking
+        pointer = (len(alMat)-1,len(alMat[-1])-1)
+        al1 = []
+        al2 = []
+        while pointer != (0,0):
+            if pointer[0] == 0:
+                al1.append('-')
+                al2.append(s2[pointer[1]-1])
+                pointer = (pointer[0],pointer[1]-1)
+            elif pointer[1] == 0:
+                al1.append(s1[pointer[0]-1])
+                al2.append('-')
+                pointer = (pointer[0]-1,pointer[1])
+            else:
+                if (alMat[pointer[0]][pointer[1]] - alMat[pointer[0]-1][pointer[1]-1] == match_score and s1[pointer[0]-1]==s2[pointer[1]-1]) or (alMat[pointer[0]][pointer[1]] - alMat[pointer[0]-1][pointer[1]-1] == mismatch_score and s1[pointer[0]-1]!=s2[pointer[1]-1]):
+                    al1.append(s1[pointer[0]-1])
+                    al2.append(s2[pointer[1]-1])
+                    pointer = (pointer[0]-1, pointer[1]-1)
+                elif alMat[pointer[0]][pointer[1]] - alMat[pointer[0]][pointer[1]-1] == gap_score:
+                    al1.append('-')
+                    al2.append(s2[pointer[1]-1])
+                    pointer = (pointer[0],pointer[1]-1)
+                elif alMat[pointer[0]][pointer[1]] - alMat[pointer[0]-1][pointer[1]] == gap_score:
+                    al1.append(s1[pointer[0]-1])
+                    al2.append('-')
+                    pointer = (pointer[0]-1,pointer[1])
+                else:
+                    raise RuntimeError('BacktrackError')
+
+        # Creation of the middle layer for the output
+        middle_layer = []
+        for i in range(len(al1)):
+            if al1[i] == al2[i]:
+                middle_layer.append('|')
+            elif al1[i] == '-' or al2[i] == '-':
+                middle_layer.append(' ')
+            else:
+                middle_layer.append('*')
+
+        # Output formatting
+        al1 = al1[::-1]
+        al2 = al2[::-1]
+        middle_layer = middle_layer[::-1]
+        print(150*'=', end='\n\n')
+        print('\t',f'Global score: {score}', '||', f'Scoring: {match_score},{mismatch_score},{gap_score} [match,mismatch,gap]', end='\n\n')
+        tot = 0
+        while True:
+            if len(al1[tot:]) > 75:
+                print(' '.join(al1[tot:tot+75]))
+                print(' '.join(middle_layer[tot:tot+75]), f'({tot+75})')
+                print(' '.join(al2[tot:tot+75]), end='\n\n')
+                tot += 75
+            else:
+                end = tot + len(al1[tot:])
+                print(' '.join(al1[tot:]))
+                print(' '.join(middle_layer[tot:]), f' ({end})')
+                print(' '.join(al2[tot:]),'\n\n')
+                break
+        print(150*'=')
+    
+    @staticmethod
+    def getMatrix(s1: str, s2: str, match_score: int = 1, mismatch_score: int = -1, gap_score: int = -2) -> None:
+        s1 = s1.upper()
+        s2 = s2.upper()
+        alMat = []
+        alMat.append([gap_score*i for i in range(len(s2)+1)])
+        for i in range(1, len(s1)+1):
+            row = []
+            row.append(gap_score*i)
+            for j in range(len(s2)):
+                row.append(None)
+            alMat.append(row)
+        for i in range(1, len(s1)+1):
+            for j in range(1, len(s2)+1):
+                diag = alMat[i-1][j-1]
+                if s1[i-1] == s2[j-1]:
+                    val = diag + match_score
+                else:
+                    val = diag + mismatch_score
+                vv = alMat[i-1][j] + gap_score
+                hv = alMat[i][j-1] + gap_score
+                
+                alMat[i][j] = max(val, vv, hv)
+        score = alMat[-1][-1]
+        
+        print('', end='\t')
+        print('§', end = '\t')
+        for i in range(len(s2)):
+            print(s2[i], end = '\t')
+        print('\n')
+        for i in range(len(alMat)):
+            if i != 0:
+                print(s1[i-1], end='\t')
+            else:
+                print('§', end='\t')
+            for j in range(len(alMat[i])):
+                print(alMat[i][j], end = '\t')
+            print('\n')
